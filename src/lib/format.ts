@@ -1,3 +1,5 @@
+import { Language } from './i18n';
+
 export function formatMoney(value: number, options: { signed?: boolean; decimals?: number } = {}): string {
   const signed = options.signed ?? false;
   const decimals = options.decimals ?? 1;
@@ -38,27 +40,36 @@ export function formatPercent(value: number, signed = false): string {
   return `${sign}${value.toFixed(2)}%`;
 }
 
-export function formatDateShort(value: string): string {
+export function formatDateShort(value: string, language: Language = 'en-US'): string {
   const date = new Date(`${value}T00:00:00`);
-  return new Intl.DateTimeFormat('en-US', {
+  return new Intl.DateTimeFormat(language, {
     month: '2-digit',
     day: '2-digit'
   }).format(date);
 }
 
-export function formatAge(value: string, now = new Date()): string {
+export function formatAge(value: string, now = new Date(), language: Language = 'en-US'): string {
   const date = new Date(value);
   const seconds = Math.max(Math.floor((now.getTime() - date.getTime()) / 1000), 0);
 
   if (seconds < 60) {
+    if (language === 'zh-CN') {
+      return `${seconds}秒前`;
+    }
     return `${seconds}s ago`;
   }
 
   const minutes = Math.floor(seconds / 60);
   if (minutes < 60) {
+    if (language === 'zh-CN') {
+      return `${minutes}分钟前`;
+    }
     return `${minutes}m ago`;
   }
 
   const hours = Math.floor(minutes / 60);
+  if (language === 'zh-CN') {
+    return `${hours}小时前`;
+  }
   return `${hours}h ago`;
 }

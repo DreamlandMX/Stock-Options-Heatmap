@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { X } from 'lucide-react';
 import { getCellMetric } from '../lib/exposure';
 import { formatAge, formatDateShort, formatMoney, formatNumber, formatPercent } from '../lib/format';
-import { ExposureCell, ExposureMetric, ExposureResponse } from '../types/options';
+import { Language, localizeAssumption, localizeSourceName, TEXT } from '../lib/i18n';
+import { ExposureCell, ExposureResponse } from '../types/options';
 
 type DetailTab = 'summary' | 'breakdown';
 
@@ -10,18 +11,20 @@ interface DetailsPanelProps {
   data: ExposureResponse;
   cell?: ExposureCell;
   onClose: () => void;
+  language: Language;
 }
 
-export function DetailsPanel({ data, cell, onClose }: DetailsPanelProps) {
+export function DetailsPanel({ data, cell, onClose, language }: DetailsPanelProps) {
   const [activeTab, setActiveTab] = useState<DetailTab>('summary');
+  const copy = TEXT[language];
 
   if (!cell) {
     return (
       <aside className="details-panel empty-panel">
         <div className="panel-title-row">
-          <h2>Cell Details</h2>
+          <h2>{copy.details.cellDetails}</h2>
         </div>
-        <p>Select any heatmap cell to inspect contract-level exposure inputs.</p>
+        <p>{copy.details.emptyPrompt}</p>
       </aside>
     );
   }
@@ -32,15 +35,15 @@ export function DetailsPanel({ data, cell, onClose }: DetailsPanelProps) {
   const netClass = netValue >= 0 ? 'positive' : 'negative';
 
   return (
-    <aside className="details-panel" aria-label="Selected cell details">
+    <aside className="details-panel" aria-label={copy.details.selectedCellDetails}>
       <div className="panel-title-row">
-        <h2>Cell Details</h2>
-        <button className="icon-button panel-close" onClick={onClose} type="button" aria-label="Clear selected cell">
+        <h2>{copy.details.cellDetails}</h2>
+        <button className="icon-button panel-close" onClick={onClose} type="button" aria-label={copy.details.clearSelectedCell}>
           <X size={18} />
         </button>
       </div>
 
-      <div className="panel-tabs" role="tablist" aria-label="Cell detail tabs">
+      <div className="panel-tabs" role="tablist" aria-label={copy.details.tabs}>
         <button
           aria-selected={activeTab === 'summary'}
           className={activeTab === 'summary' ? 'active' : ''}
@@ -48,7 +51,7 @@ export function DetailsPanel({ data, cell, onClose }: DetailsPanelProps) {
           role="tab"
           type="button"
         >
-          Summary
+          {copy.details.summary}
         </button>
         <button
           aria-selected={activeTab === 'breakdown'}
@@ -57,7 +60,7 @@ export function DetailsPanel({ data, cell, onClose }: DetailsPanelProps) {
           role="tab"
           type="button"
         >
-          Breakdown
+          {copy.details.breakdown}
         </button>
       </div>
 
@@ -69,9 +72,10 @@ export function DetailsPanel({ data, cell, onClose }: DetailsPanelProps) {
           netClass={netClass}
           netValue={netValue}
           putValue={putValue}
+          language={language}
         />
       ) : (
-        <BreakdownTab cell={cell} data={data} />
+        <BreakdownTab cell={cell} data={data} language={language} />
       )}
     </aside>
   );
@@ -84,75 +88,79 @@ function SummaryTab(props: {
   callValue: number;
   putValue: number;
   netClass: string;
+  language: Language;
 }) {
-  const { data, cell, netValue, callValue, putValue, netClass } = props;
+  const { data, cell, netValue, callValue, putValue, netClass, language } = props;
+  const copy = TEXT[language];
+  const metric = data.metric.toUpperCase();
 
   return (
     <>
-      <CellOverview data={data} cell={cell} />
+      <CellOverview data={data} cell={cell} language={language} />
 
       <div className="net-card">
-        <span>Net {data.metric.toUpperCase()}</span>
+        <span>{copy.details.netMetric(metric)}</span>
         <strong className={netClass}>{formatMoney(netValue, { signed: true })}</strong>
-        <small>{data.metric === 'vex' ? 'model-derived per 1% vol move' : 'per 1% underlying move'}</small>
+        <small>{data.metric === 'vex' ? copy.details.vexUnit : copy.details.gexUnit}</small>
       </div>
 
       <div className="split-metrics">
         <div>
-          <span>Call {data.metric.toUpperCase()}</span>
+          <span>{copy.details.callMetric(metric)}</span>
           <strong className={callValue >= 0 ? 'positive' : 'negative'}>{formatMoney(callValue, { signed: true })}</strong>
         </div>
         <div>
-          <span>Put {data.metric.toUpperCase()}</span>
+          <span>{copy.details.putMetric(metric)}</span>
           <strong className={putValue >= 0 ? 'positive' : 'negative'}>{formatMoney(putValue, { signed: true })}</strong>
         </div>
       </div>
 
-      <h3>Key Metrics</h3>
+      <h3>{copy.details.keyMetrics}</h3>
       <dl className="metric-list">
         <div>
-          <dt>Call OI</dt>
+          <dt>{copy.details.callOi}</dt>
           <dd>{formatNumber(cell.callOi, 0)}</dd>
         </div>
         <div>
-          <dt>Put OI</dt>
+          <dt>{copy.details.putOi}</dt>
           <dd>{formatNumber(cell.putOi, 0)}</dd>
         </div>
         <div>
-          <dt>Gamma Call</dt>
+          <dt>{copy.details.gammaCall}</dt>
           <dd>{cell.callGamma.toFixed(5)}</dd>
         </div>
         <div>
-          <dt>Gamma Put</dt>
+          <dt>{copy.details.gammaPut}</dt>
           <dd>{cell.putGamma.toFixed(5)}</dd>
         </div>
         <div>
-          <dt>Vanna Call</dt>
+          <dt>{copy.details.vannaCall}</dt>
           <dd>{cell.callVanna.toFixed(5)}</dd>
         </div>
         <div>
-          <dt>Vanna Put</dt>
+          <dt>{copy.details.vannaPut}</dt>
           <dd>{cell.putVanna.toFixed(5)}</dd>
         </div>
         <div>
-          <dt>IV Mid</dt>
+          <dt>{copy.details.ivMid}</dt>
           <dd>{formatPercent(cell.ivMid * 100)}</dd>
         </div>
         <div>
-          <dt>Contracts</dt>
+          <dt>{copy.details.contracts}</dt>
           <dd>{cell.contractCount}</dd>
         </div>
       </dl>
 
-      <SourceBlock cell={cell} />
+      <SourceBlock cell={cell} language={language} />
     </>
   );
 }
 
-function BreakdownTab({ data, cell }: { data: ExposureResponse; cell: ExposureCell }) {
+function BreakdownTab({ data, cell, language }: { data: ExposureResponse; cell: ExposureCell; language: Language }) {
+  const copy = TEXT[language];
   const rows = [
     {
-      side: 'Call',
+      side: copy.details.call,
       gex: cell.callGex,
       vex: cell.callVex,
       oi: cell.callOi,
@@ -160,7 +168,7 @@ function BreakdownTab({ data, cell }: { data: ExposureResponse; cell: ExposureCe
       vanna: cell.callVanna
     },
     {
-      side: 'Put',
+      side: copy.details.put,
       gex: cell.putGex,
       vex: cell.putVex,
       oi: cell.putOi,
@@ -171,12 +179,12 @@ function BreakdownTab({ data, cell }: { data: ExposureResponse; cell: ExposureCe
 
   return (
     <div className="breakdown-stack">
-      <CellOverview data={data} cell={cell} />
+      <CellOverview data={data} cell={cell} language={language} />
 
-      <h3>Exposure Breakdown</h3>
-      <div className="breakdown-table" role="table" aria-label="Call and put exposure breakdown">
+      <h3>{copy.details.exposureBreakdown}</h3>
+      <div className="breakdown-table" role="table" aria-label={copy.details.callPutBreakdown}>
         <div className="breakdown-row breakdown-head" role="row">
-          <span role="columnheader">Side</span>
+          <span role="columnheader">{copy.details.side}</span>
           <span role="columnheader">GEX</span>
           <span role="columnheader">VEX</span>
         </div>
@@ -192,7 +200,7 @@ function BreakdownTab({ data, cell }: { data: ExposureResponse; cell: ExposureCe
           </div>
         ))}
         <div className="breakdown-row net" role="row">
-          <span role="cell">Net</span>
+          <span role="cell">{copy.details.net}</span>
           <strong className={cell.netGex >= 0 ? 'positive' : 'negative'} role="cell">
             {formatMoney(cell.netGex, { signed: true })}
           </strong>
@@ -202,22 +210,22 @@ function BreakdownTab({ data, cell }: { data: ExposureResponse; cell: ExposureCe
         </div>
       </div>
 
-      <h3>Side Inputs</h3>
+      <h3>{copy.details.sideInputs}</h3>
       <div className="side-input-grid">
         {rows.map((row) => (
           <section key={row.side} className="side-input-card">
             <strong>{row.side}</strong>
             <dl>
               <div>
-                <dt>Open Interest</dt>
+                <dt>{copy.details.openInterest}</dt>
                 <dd>{formatNumber(row.oi, 0)}</dd>
               </div>
               <div>
-                <dt>Avg Gamma</dt>
+                <dt>{copy.details.avgGamma}</dt>
                 <dd>{row.gamma.toFixed(5)}</dd>
               </div>
               <div>
-                <dt>Avg Vanna</dt>
+                <dt>{copy.details.avgVanna}</dt>
                 <dd>{row.vanna.toFixed(5)}</dd>
               </div>
             </dl>
@@ -225,33 +233,35 @@ function BreakdownTab({ data, cell }: { data: ExposureResponse; cell: ExposureCe
         ))}
       </div>
 
-      <h3>Model Notes</h3>
+      <h3>{copy.details.modelNotes}</h3>
       <ul className="assumption-list">
         {data.assumptions.map((assumption) => (
-          <li key={assumption}>{assumption}</li>
+          <li key={assumption}>{localizeAssumption(assumption, language)}</li>
         ))}
       </ul>
 
-      <SourceBlock cell={cell} />
+      <SourceBlock cell={cell} language={language} />
     </div>
   );
 }
 
-function CellOverview({ data, cell }: { data: ExposureResponse; cell: ExposureCell }) {
+function CellOverview({ data, cell, language }: { data: ExposureResponse; cell: ExposureCell; language: Language }) {
+  const copy = TEXT[language];
+
   return (
     <dl className="detail-list">
       <div>
-        <dt>Strike</dt>
+        <dt>{copy.details.strike}</dt>
         <dd>{formatNumber(cell.strike, Number.isInteger(cell.strike) ? 0 : 1)}</dd>
       </div>
       <div>
-        <dt>Expiration</dt>
+        <dt>{copy.details.expiration}</dt>
         <dd>
-          {cell.expiration} ({formatDateShort(cell.expiration)})
+          {cell.expiration} ({formatDateShort(cell.expiration, language)})
         </dd>
       </div>
       <div>
-        <dt>Underlying</dt>
+        <dt>{copy.details.underlying}</dt>
         <dd>
           {data.quote.symbol} {formatNumber(data.quote.price, 2)}
         </dd>
@@ -260,18 +270,20 @@ function CellOverview({ data, cell }: { data: ExposureResponse; cell: ExposureCe
   );
 }
 
-function SourceBlock({ cell }: { cell: ExposureCell }) {
+function SourceBlock({ cell, language }: { cell: ExposureCell; language: Language }) {
+  const copy = TEXT[language];
+
   return (
     <div className="source-block">
       <div>
-        <span>Source</span>
-        <strong>{cell.source}</strong>
+        <span>{copy.details.source}</span>
+        <strong>{localizeSourceName(cell.source, language)}</strong>
       </div>
       <div>
-        <span>Data Updated</span>
-        <strong>{formatAge(cell.updatedAt)}</strong>
+        <span>{copy.details.dataUpdated}</span>
+        <strong>{formatAge(cell.updatedAt, new Date(), language)}</strong>
       </div>
-      {cell.stale ? <p className="warning-text">This cell has stale quote inputs.</p> : null}
+      {cell.stale ? <p className="warning-text">{copy.details.staleWarning}</p> : null}
     </div>
   );
 }

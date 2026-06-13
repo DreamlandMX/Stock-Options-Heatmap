@@ -14,5 +14,6 @@ describe('format helpers', () => {
 
   it('formats data age', () => {
     expect(formatAge('2026-06-12T14:29:45Z', new Date('2026-06-12T14:30:00Z'))).toBe('15s ago');
+    expect(formatAge('2026-06-12T14:29:45Z', new Date('2026-06-12T14:30:00Z'), 'zh-CN')).toBe('15秒前');
   });
 });

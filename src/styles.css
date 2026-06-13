@@ -123,6 +123,7 @@ button {
 .icon-button,
 .action-button,
 .metric-toggle button,
+.language-toggle button,
 .ticker-search,
 .select-shell {
   border: 1px solid var(--border);
@@ -132,7 +133,8 @@ button {
 
 .icon-button,
 .action-button,
-.metric-toggle button {
+.metric-toggle button,
+.language-toggle button {
   cursor: pointer;
   transition:
     border-color 160ms ease,
@@ -142,14 +144,16 @@ button {
 
 .icon-button:hover,
 .action-button:hover,
-.metric-toggle button:hover {
+.metric-toggle button:hover,
+.language-toggle button:hover {
   border-color: var(--border-strong);
   background: rgba(26, 33, 45, 0.92);
 }
 
 .icon-button:active,
 .action-button:active,
-.metric-toggle button:active {
+.metric-toggle button:active,
+.language-toggle button:active {
   transform: translateY(1px);
 }
 
@@ -288,7 +292,8 @@ button {
   color: var(--muted);
 }
 
-.metric-toggle {
+.metric-toggle,
+.language-toggle {
   display: inline-flex;
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -296,7 +301,8 @@ button {
   background: rgba(6, 8, 12, 0.76);
 }
 
-.metric-toggle button {
+.metric-toggle button,
+.language-toggle button {
   height: 36px;
   display: inline-flex;
   align-items: center;
@@ -311,7 +317,12 @@ button {
   font-size: 13px;
 }
 
-.metric-toggle button.active {
+.language-toggle button {
+  min-width: 46px;
+}
+
+.metric-toggle button.active,
+.language-toggle button.active {
   color: var(--text);
   background: linear-gradient(180deg, rgba(139, 93, 255, 0.36), rgba(95, 50, 176, 0.32));
   border-color: rgba(168, 117, 255, 0.55);
@@ -1088,6 +1099,11 @@ button {
   .timestamp,
   .data-status {
     font-size: 11px;
+  }
+
+  .language-toggle button {
+    min-width: 40px;
+    padding: 0 8px;
   }
 
   .select-shell {

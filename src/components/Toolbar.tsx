@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { ExposureMetric, ProviderMode, UnderlyingQuote } from '../types/options';
 import { formatAge, formatNumber, formatPercent } from '../lib/format';
+import { LANGUAGE_OPTIONS, Language, TEXT } from '../lib/i18n';
 
 type ActivePopover = 'menu' | 'settings' | 'filters' | null;
 
@@ -31,12 +32,15 @@ interface ToolbarProps {
   loading: boolean;
   mode?: string;
   generatedAt?: string;
+  language: Language;
+  onLanguageChange: (language: Language) => void;
 }
 
 export function Toolbar(props: ToolbarProps) {
   const [activePopover, setActivePopover] = useState<ActivePopover>(null);
   const changeClass = props.quote && props.quote.change >= 0 ? 'positive' : 'negative';
-  const statusLabel = props.mode === 'live' ? 'OpenD live data' : 'Demo data';
+  const copy = TEXT[props.language];
+  const statusLabel = props.mode === 'live' ? copy.toolbar.openDLiveData : copy.toolbar.demoData;
 
   function togglePopover(popover: Exclude<ActivePopover, null>) {
     setActivePopover((current) => (current === popover ? null : popover));
@@ -54,14 +58,14 @@ export function Toolbar(props: ToolbarProps) {
           className="icon-button"
           aria-controls="app-menu-popover"
           aria-expanded={activePopover === 'menu'}
-          aria-label="Open menu"
+          aria-label={copy.toolbar.openMenu}
           onClick={() => togglePopover('menu')}
           type="button"
         >
           <Menu size={22} />
         </button>
         <div className="brand">
-          <span className="brand-title">Options Heatmap</span>
+          <span className="brand-title">{copy.toolbar.brandTitle}</span>
         </div>
         <form
           className="ticker-search"
@@ -73,7 +77,7 @@ export function Toolbar(props: ToolbarProps) {
         >
           <Search size={17} />
           <input
-            aria-label="Ticker"
+            aria-label={copy.toolbar.ticker}
             name="ticker"
             value={props.inputTicker}
             onChange={(event) => props.onInputTickerChange(event.target.value.toUpperCase())}
@@ -87,7 +91,7 @@ export function Toolbar(props: ToolbarProps) {
           />
         </form>
         {props.quote ? (
-          <div className="quote-chip" aria-label="Underlying quote">
+          <div className="quote-chip" aria-label={copy.toolbar.underlyingQuote}>
             <span>{formatNumber(props.quote.price, props.quote.price > 1000 ? 2 : 2)}</span>
             <span className={changeClass}>
               {formatNumber(props.quote.change, 2)} ({formatPercent(props.quote.changePercent, true)})
@@ -97,23 +101,25 @@ export function Toolbar(props: ToolbarProps) {
       </div>
 
       <div className="toolbar-right">
-        <div className="data-status" aria-label="Data status">
+        <div className="data-status" aria-label={copy.toolbar.dataStatus}>
           <span className={props.mode === 'live' ? 'status-dot live' : 'status-dot demo'} />
-          <span>{props.mode === 'live' ? 'OpenD' : 'Demo'}</span>
+          <span>{props.mode === 'live' ? copy.toolbar.liveStatus : copy.toolbar.demoStatus}</span>
         </div>
-        {props.generatedAt ? <div className="timestamp">Updated {formatAge(props.generatedAt)}</div> : null}
+        {props.generatedAt ? (
+          <div className="timestamp">{copy.toolbar.updated(formatAge(props.generatedAt, new Date(), props.language))}</div>
+        ) : null}
 
         <label className="select-shell desktop-control">
-          <span>Provider</span>
+          <span>{copy.toolbar.provider}</span>
           <select value={props.provider} onChange={(event) => props.onProviderChange(event.target.value as ProviderMode)}>
-            <option value="auto">Auto</option>
-            <option value="demo">Demo</option>
-            <option value="moomoo">Moomoo</option>
+            <option value="auto">{copy.toolbar.auto}</option>
+            <option value="demo">{copy.toolbar.demo}</option>
+            <option value="moomoo">{copy.toolbar.moomoo}</option>
           </select>
           <ChevronDown size={15} />
         </label>
 
-        <div className="metric-toggle desktop-control" aria-label="Metric toggle">
+        <div className="metric-toggle desktop-control" aria-label={copy.toolbar.metricToggle}>
           <button
             className={props.metric === 'gex' ? 'active' : ''}
             onClick={() => props.onMetricChange('gex')}
@@ -133,7 +139,7 @@ export function Toolbar(props: ToolbarProps) {
         </div>
 
         <label className="select-shell desktop-control">
-          <span>Expirations</span>
+          <span>{copy.toolbar.expirations}</span>
           <select value={props.expirations} onChange={(event) => props.onExpirationsChange(Number(event.target.value))}>
             {[4, 6, 9, 12, 14].map((value) => (
               <option key={value} value={value}>
@@ -145,7 +151,7 @@ export function Toolbar(props: ToolbarProps) {
         </label>
 
         <label className="select-shell desktop-control">
-          <span>Strike Range</span>
+          <span>{copy.toolbar.strikeRange}</span>
           <select value={props.strikeRange} onChange={(event) => props.onStrikeRangeChange(Number(event.target.value))}>
             {[5, 10, 15, 20, 30].map((value) => (
               <option key={value} value={value}>
@@ -158,13 +164,26 @@ export function Toolbar(props: ToolbarProps) {
 
         <button className="action-button" onClick={props.onRefresh} type="button">
           <RefreshCw size={16} className={props.loading ? 'spin' : ''} />
-          Refresh
+          {copy.toolbar.refresh}
         </button>
+        <div className="language-toggle" aria-label={copy.toolbar.languageToggle}>
+          {LANGUAGE_OPTIONS.map((option) => (
+            <button
+              className={props.language === option.value ? 'active' : ''}
+              key={option.value}
+              onClick={() => props.onLanguageChange(option.value)}
+              type="button"
+              aria-pressed={props.language === option.value}
+            >
+              {option.shortLabel}
+            </button>
+          ))}
+        </div>
         <button
           className="icon-button"
           aria-controls="settings-popover"
           aria-expanded={activePopover === 'settings'}
-          aria-label="Settings"
+          aria-label={copy.toolbar.settings}
           onClick={() => togglePopover('settings')}
           type="button"
         >
@@ -174,7 +193,7 @@ export function Toolbar(props: ToolbarProps) {
           className="icon-button compact-only"
           aria-controls="filters-popover"
           aria-expanded={activePopover === 'filters'}
-          aria-label="Filters"
+          aria-label={copy.toolbar.filters}
           onClick={() => togglePopover('filters')}
           type="button"
         >
@@ -183,13 +202,13 @@ export function Toolbar(props: ToolbarProps) {
       </div>
 
       {activePopover === 'menu' ? (
-        <div className="toolbar-popover menu-popover" id="app-menu-popover" role="dialog" aria-label="App menu">
+        <div className="toolbar-popover menu-popover" id="app-menu-popover" role="dialog" aria-label={copy.toolbar.appMenu}>
           <div className="popover-title-row">
-            <strong>App Menu</strong>
+            <strong>{copy.toolbar.appMenu}</strong>
             <span>{statusLabel}</span>
           </div>
           <div className="popover-section">
-            <span className="popover-label">Quick Symbols</span>
+            <span className="popover-label">{copy.toolbar.quickSymbols}</span>
             <div className="symbol-grid">
               {['SPY', 'QQQ', 'TSLA', 'AMD', 'NVDA', 'VIX', 'SPXW'].map((symbol) => (
                 <button key={symbol} onClick={() => submitPresetTicker(symbol)} type="button">
@@ -204,48 +223,50 @@ export function Toolbar(props: ToolbarProps) {
               onClick={() => props.onMetricChange('gex')}
               type="button"
             >
-              GEX View
+              {copy.toolbar.gexView}
             </button>
             <button
               className={props.metric === 'vex' ? 'active' : ''}
               onClick={() => props.onMetricChange('vex')}
               type="button"
             >
-              VEX View
+              {copy.toolbar.vexView}
             </button>
           </div>
           <button className="popover-primary" onClick={props.onRefresh} type="button">
-            Refresh data
+            {copy.toolbar.refreshData}
           </button>
         </div>
       ) : null}
 
       {activePopover === 'settings' ? (
-        <div className="toolbar-popover settings-popover" id="settings-popover" role="dialog" aria-label="Settings">
+        <div className="toolbar-popover settings-popover" id="settings-popover" role="dialog" aria-label={copy.toolbar.settings}>
           <div className="popover-title-row">
-            <strong>Settings</strong>
-            <span>{props.generatedAt ? `Updated ${formatAge(props.generatedAt)}` : statusLabel}</span>
+            <strong>{copy.toolbar.settings}</strong>
+            <span>
+              {props.generatedAt ? copy.toolbar.updated(formatAge(props.generatedAt, new Date(), props.language)) : statusLabel}
+            </span>
           </div>
           <label className="popover-field">
-            <span>Provider</span>
+            <span>{copy.toolbar.provider}</span>
             <select value={props.provider} onChange={(event) => props.onProviderChange(event.target.value as ProviderMode)}>
-              <option value="auto">Auto</option>
-              <option value="demo">Demo</option>
-              <option value="moomoo">Moomoo</option>
+              <option value="auto">{copy.toolbar.auto}</option>
+              <option value="demo">{copy.toolbar.demo}</option>
+              <option value="moomoo">{copy.toolbar.moomoo}</option>
             </select>
           </label>
           <label className="popover-field">
-            <span>Expirations</span>
+            <span>{copy.toolbar.expirations}</span>
             <select value={props.expirations} onChange={(event) => props.onExpirationsChange(Number(event.target.value))}>
               {[4, 6, 9, 12, 14].map((value) => (
                 <option key={value} value={value}>
-                  {value} columns
+                  {copy.toolbar.columns(value)}
                 </option>
               ))}
             </select>
           </label>
           <label className="popover-field">
-            <span>Strike Range</span>
+            <span>{copy.toolbar.strikeRange}</span>
             <select value={props.strikeRange} onChange={(event) => props.onStrikeRangeChange(Number(event.target.value))}>
               {[5, 10, 15, 20, 30].map((value) => (
                 <option key={value} value={value}>
@@ -255,15 +276,15 @@ export function Toolbar(props: ToolbarProps) {
             </select>
           </label>
           <button className="popover-primary" onClick={() => setActivePopover(null)} type="button">
-            Done
+            {copy.toolbar.done}
           </button>
         </div>
       ) : null}
 
       {activePopover === 'filters' ? (
-        <div className="toolbar-popover filters-popover" id="filters-popover" role="dialog" aria-label="Filters">
+        <div className="toolbar-popover filters-popover" id="filters-popover" role="dialog" aria-label={copy.toolbar.filters}>
           <div className="popover-title-row">
-            <strong>Filters</strong>
+            <strong>{copy.toolbar.filters}</strong>
             <span>{props.metric.toUpperCase()}</span>
           </div>
           <div className="popover-section two-column-actions">
@@ -283,7 +304,7 @@ export function Toolbar(props: ToolbarProps) {
             </button>
           </div>
           <label className="popover-field">
-            <span>Expirations</span>
+            <span>{copy.toolbar.expirations}</span>
             <select value={props.expirations} onChange={(event) => props.onExpirationsChange(Number(event.target.value))}>
               {[4, 6, 9, 12, 14].map((value) => (
                 <option key={value} value={value}>
@@ -293,7 +314,7 @@ export function Toolbar(props: ToolbarProps) {
             </select>
           </label>
           <label className="popover-field">
-            <span>Strike Range</span>
+            <span>{copy.toolbar.strikeRange}</span>
             <select value={props.strikeRange} onChange={(event) => props.onStrikeRangeChange(Number(event.target.value))}>
               {[5, 10, 15, 20, 30].map((value) => (
                 <option key={value} value={value}>

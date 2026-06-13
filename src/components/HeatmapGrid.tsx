@@ -1,34 +1,38 @@
 import { Filter } from 'lucide-react';
 import { getCellMetric } from '../lib/exposure';
 import { formatDateShort, formatMoney, formatNumber } from '../lib/format';
+import { Language, TEXT } from '../lib/i18n';
 import { ExposureCell, ExposureMetric, ExposureResponse } from '../types/options';
 
 interface HeatmapGridProps {
   data: ExposureResponse;
   selectedCellKey?: string;
   onSelectCell: (cell: ExposureCell) => void;
+  language: Language;
 }
 
-export function HeatmapGrid({ data, selectedCellKey, onSelectCell }: HeatmapGridProps) {
+export function HeatmapGrid({ data, selectedCellKey, onSelectCell, language }: HeatmapGridProps) {
   const cellMap = new Map(data.cells.map((cell) => [cell.key, cell]));
   const maxAbs = Math.max(...data.cells.map((cell) => Math.abs(getCellMetric(cell, data.metric))), 1);
   const nearestStrike = findNearestStrike(data.strikes, data.quote.price);
+  const copy = TEXT[language];
+  const heatmapLabel = copy.heatmap.heatmapLabel(data.metric.toUpperCase());
 
   return (
-    <section className="heatmap-card" aria-label={`${data.metric.toUpperCase()} heatmap`}>
+    <section className="heatmap-card" aria-label={heatmapLabel}>
       <div
         className="heatmap-grid"
         role="grid"
-        aria-label={`${data.metric.toUpperCase()} heatmap`}
+        aria-label={heatmapLabel}
         style={{ gridTemplateColumns: `112px repeat(${data.expirations.length}, minmax(104px, 1fr))` }}
       >
         <div className="grid-header strike-header">
-          <span>Strike</span>
+          <span>{copy.heatmap.strike}</span>
           <Filter size={15} />
         </div>
         {data.expirations.map((expiration) => (
           <div className="grid-header expiry-header" key={expiration}>
-            <span>{formatDateShort(expiration)}</span>
+            <span>{formatDateShort(expiration, language)}</span>
             <small>{daysToExpiryLabel(expiration, data.generatedAt)}</small>
           </div>
         ))}
@@ -45,10 +49,11 @@ export function HeatmapGrid({ data, selectedCellKey, onSelectCell }: HeatmapGrid
             maxAbs={maxAbs}
             selectedCellKey={selectedCellKey}
             onSelectCell={onSelectCell}
+            language={language}
           />
         ))}
       </div>
-      <HeatmapLegend metric={data.metric} />
+      <HeatmapLegend metric={data.metric} language={language} />
     </section>
   );
 }
@@ -63,8 +68,10 @@ function StrikeRow(props: {
   maxAbs: number;
   selectedCellKey?: string;
   onSelectCell: (cell: ExposureCell) => void;
+  language: Language;
 }) {
   const isCurrent = props.strike === props.nearestStrike;
+  const copy = TEXT[props.language];
 
   return (
     <>
@@ -92,7 +99,12 @@ function StrikeRow(props: {
             onClick={() => props.onSelectCell(cell)}
             type="button"
             role="gridcell"
-            aria-label={`${props.metric.toUpperCase()} ${formatMoney(value, { signed: true })} at strike ${props.strike} expiration ${expiration}`}
+            aria-label={copy.heatmap.cellLabel(
+              props.metric.toUpperCase(),
+              formatMoney(value, { signed: true }),
+              props.strike,
+              expiration
+            )}
           >
             <span>{formatMoney(value, { signed: true })}</span>
           </button>
@@ -102,10 +114,12 @@ function StrikeRow(props: {
   );
 }
 
-function HeatmapLegend({ metric }: { metric: ExposureMetric }) {
+function HeatmapLegend({ metric, language }: { metric: ExposureMetric; language: Language }) {
+  const copy = TEXT[language];
+
   return (
     <footer className="heatmap-legend">
-      <span>Exposure per 1% {metric === 'gex' ? 'underlying move' : 'volatility move'}</span>
+      <span>{metric === 'gex' ? copy.heatmap.exposurePerUnderlyingMove : copy.heatmap.exposurePerVolMove}</span>
       <div className="legend-ramp" aria-hidden="true" />
       <div className="legend-labels">
         <span>-10M</span>
@@ -114,7 +128,7 @@ function HeatmapLegend({ metric }: { metric: ExposureMetric }) {
         <span>+1M</span>
         <span>+10M</span>
       </div>
-      <span className="legend-wall">Highest absolute wall</span>
+      <span className="legend-wall">{copy.heatmap.highestAbsoluteWall}</span>
     </footer>
   );
 }

@@ -1,47 +1,50 @@
 import { formatDateShort, formatMoney, formatNumber } from '../lib/format';
+import { Language, TEXT } from '../lib/i18n';
 import { ExposureMetric, ExposureResponse } from '../types/options';
 
 interface SummaryStripProps {
   data: ExposureResponse;
+  language: Language;
 }
 
-export function SummaryStrip({ data }: SummaryStripProps) {
+export function SummaryStrip({ data, language }: SummaryStripProps) {
   const metric = data.metric;
+  const copy = TEXT[language];
   const cards = [
     {
-      label: 'Total GEX',
+      label: copy.summary.totalGex,
       value: formatMoney(data.summary.totalGex, { signed: true }),
-      sublabel: 'per 1% move'
+      sublabel: copy.summary.perOneMove
     },
     {
-      label: 'Total VEX',
+      label: copy.summary.totalVex,
       value: formatMoney(data.summary.totalVex, { signed: true }),
-      sublabel: 'model-derived'
+      sublabel: copy.summary.modelDerived
     },
     {
-      label: 'Zero Gamma Est.',
+      label: copy.summary.zeroGamma,
       value: formatNumber(data.summary.zeroGammaEstimate, 2),
-      sublabel: `Spot ${formatNumber(data.quote.price, 2)}`
+      sublabel: copy.summary.spot(formatNumber(data.quote.price, 2))
     },
     {
-      label: 'Call Wall',
+      label: copy.summary.callWall,
       value: formatWall(data.summary.callWall.strike),
       sublabel: `${metricLabel(metric)} ${formatMoney(data.summary.callWall.value, { signed: true })}`
     },
     {
-      label: 'Put Wall',
+      label: copy.summary.putWall,
       value: formatWall(data.summary.putWall.strike),
       sublabel: `${metricLabel(metric)} ${formatMoney(data.summary.putWall.value, { signed: true })}`
     },
     {
-      label: 'Top Expiration',
-      value: data.summary.topExpiration.expiration ? formatDateShort(data.summary.topExpiration.expiration) : '-',
+      label: copy.summary.topExpiration,
+      value: data.summary.topExpiration.expiration ? formatDateShort(data.summary.topExpiration.expiration, language) : '-',
       sublabel: formatMoney(data.summary.topExpiration.value, { signed: true })
     }
   ];
 
   return (
-    <section className="summary-strip" aria-label="Exposure summary">
+    <section className="summary-strip" aria-label={copy.summary.exposureSummary}>
       {cards.map((card) => (
         <article className="summary-card" key={card.label}>
           <span>{card.label}</span>

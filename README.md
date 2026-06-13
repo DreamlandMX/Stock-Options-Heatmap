@@ -1,47 +1,65 @@
-# Options GEX/VEX Heatmap
+# 期权 GEX/VEX 热力图
 
-A local desktop web app for inspecting options gamma exposure (GEX) and model-derived vanna exposure (VEX) by strike and expiration.
+这是一个本地桌面 Web 应用，用来按行权价和到期日查看期权 Gamma Exposure（GEX）以及模型估算的 Vanna Exposure（VEX）。
 
-The public default is demo-only sample data. Optional Moomoo/Futu OpenD support is still included for local use, but the app will not connect to OpenD unless you explicitly opt in.
+默认模式使用演示数据，不需要券商账号。项目仍保留可选的 Moomoo/Futu OpenD 本地实时数据路径，但只有在你明确启用时才会连接 OpenD。
 
-## Requirements
+## 功能亮点
 
-- Node.js 20 or newer.
-- npm, included with Node.js.
-- No brokerage account is required for the default demo mode.
-- A Moomoo/Futu account is required only if you want to use local live OpenD data.
+- 简体中文 / English 语言切换，默认简体中文，并会记住上次选择。
+- GEX/VEX 热力图，按行权价和到期日展示净敞口。
+- 详情面板展示 Call/Put 拆分、OI、Gamma、Vanna、IV 等输入。
+- 支持 `demo`、`auto`、`moomoo` 三种数据模式。
+- 公开默认配置安全：不包含账号、密钥或本地 `.env.local`。
 
-## Quick Start
+## 环境要求
+
+- Node.js 20 或更新版本。
+- npm（随 Node.js 一起安装）。
+- 默认演示模式不需要券商账号。
+- 只有使用本地实时 OpenD 数据时，才需要 Moomoo/Futu 账号。
+
+## 快速开始
 
 ```powershell
 npm.cmd install
 npm.cmd run dev
 ```
 
-Open `http://127.0.0.1:5173`.
+打开：
 
-## Data Modes
+```text
+http://127.0.0.1:5173
+```
 
-- `demo`: deterministic sample chain data for SPY, QQQ, TSLA, VIX, and SPXW.
-- `auto`: uses demo data by default. If `MOOMOO_AUTO_CONNECT=true` is set locally, it tries Moomoo/Futu OpenD and falls back to demo with a visible warning.
-- `moomoo`: explicitly tries the local OpenD path and still falls back to demo so the app remains usable.
+## 语言切换
 
-## Optional Live Data With Moomoo/Futu OpenD
+应用默认显示简体中文。工具栏右侧有 `中文 / EN` 切换按钮，选择会保存到浏览器 `localStorage`，刷新后仍会保留。
 
-Live data is optional and runs through your own local Moomoo/Futu OpenD gateway. This repository does not include your account credentials or API keys.
+GEX、VEX、OI、IV、OpenD、Moomoo、Ticker 等金融或产品术语会保留英文缩写，避免和券商/API 文档脱节。
 
-Before enabling live data:
+## 数据模式
 
-1. Create or use an existing Moomoo/Futu account that has access to the market data you want to view.
-2. Download and install Moomoo OpenD from the official OpenAPI download page: `https://www.moomoo.com/download/OpenAPI`.
-3. Start OpenD locally and log in inside OpenD with your Moomoo/Futu account.
-4. Install the Python SDK in the Python environment you want the app to use:
+- `demo`：默认演示数据，包含 SPY、QQQ、TSLA、VIX、SPXW 等样本标的。
+- `auto`：默认仍使用 demo。只有本地设置 `MOOMOO_AUTO_CONNECT=true` 时，才会先尝试 Moomoo/Futu OpenD，失败后回退到 demo 并显示提示。
+- `moomoo`：明确尝试本地 OpenD 路径；若 OpenD 不可用，也会回退到 demo，保证应用仍可使用。
+
+## 可选：使用 Moomoo/Futu OpenD 实时数据
+
+实时数据通过你自己的本地 Moomoo/Futu OpenD 网关获取。本仓库不包含账号凭据或 API 密钥。
+
+启用前请完成：
+
+1. 创建或使用已有 Moomoo/Futu 账号，并确认账号有目标市场数据权限。
+2. 从官方 OpenAPI 下载页安装 Moomoo OpenD：`https://www.moomoo.com/download/OpenAPI`。
+3. 在本机启动 OpenD，并在 OpenD 内登录你的 Moomoo/Futu 账号。
+4. 在应用使用的 Python 环境里安装 SDK：
 
 ```powershell
 pip install moomoo-api
 ```
 
-5. Copy `.env.example` to `.env.local`, then set the local OpenD options:
+5. 复制 `.env.example` 为 `.env.local`，并配置本地 OpenD：
 
 ```env
 OPTIONS_PROVIDER=moomoo
@@ -51,30 +69,38 @@ MOOMOO_PYTHON=python
 MOOMOO_AUTO_CONNECT=false
 ```
 
-Use `OPTIONS_PROVIDER=moomoo` when you explicitly want live OpenD data. Keep `MOOMOO_AUTO_CONNECT=false` unless you want `auto` mode to try OpenD before falling back to demo.
+当你明确希望使用实时 OpenD 数据时，设置 `OPTIONS_PROVIDER=moomoo`。除非希望 `auto` 模式自动尝试 OpenD，否则建议保持 `MOOMOO_AUTO_CONNECT=false`。
 
-OpenD is a local gateway used by Moomoo/Futu API programs. The Python SDK connects to that gateway on the configured host and port. Account login and permissions are handled by OpenD, not by this repository.
+OpenD 是 Moomoo/Futu API 程序使用的本地网关。Python SDK 会连接到配置的 host 和 port；账号登录和权限由 OpenD 处理，不由本仓库处理。
 
-Do not commit `.env.local`, `.venv/`, `node_modules/`, or `dist/`; they are local/generated files.
+不要提交 `.env.local`、`.venv/`、`node_modules/`、`dist/` 或 `dist-server/`；这些都是本地或生成文件。
 
-## Metrics
+## 指标说明
 
-GEX is calculated per 1% underlying move:
+GEX 按标的价格每 1% 变动计算：
 
 ```text
 gamma * openInterest * contractSize * spot^2 * 0.01
 ```
 
-Calls are treated as positive exposure and puts as negative exposure.
+Call 敞口按正值处理，Put 敞口按负值处理。
 
-VEX is model-derived when provider vanna is absent. The app uses Black-Scholes vanna:
+当数据源没有提供 vanna 时，VEX 使用 Black-Scholes vanna 进行模型估算：
 
 ```text
 vanna = -phi(d1) * d2 / iv
 ```
 
-and scales it by open interest, contract size, spot, and a 1% volatility move. This is an exposure estimate, not a broker-certified metric.
+随后按未平仓量、合约乘数、标的价格和 1% 波动率变动进行缩放。VEX 是敞口估算，不是券商认证指标。
 
-## Disclaimer
+## 常用命令
 
-This tool is for informational and research use only. It is not investment advice and does not place trades.
+```powershell
+npm.cmd test
+npm.cmd run build
+npm.cmd run dev
+```
+
+## 免责声明
+
+本工具仅用于信息展示和研究，不构成投资建议，也不会下单或执行交易。
