@@ -256,6 +256,16 @@ export function Toolbar(props: ToolbarProps) {
             </select>
           </label>
           <label className="popover-field">
+            <span>{copy.toolbar.language}</span>
+            <select value={props.language} onChange={(event) => props.onLanguageChange(event.target.value as Language)}>
+              {LANGUAGE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="popover-field">
             <span>{copy.toolbar.expirations}</span>
             <select value={props.expirations} onChange={(event) => props.onExpirationsChange(Number(event.target.value))}>
               {[4, 6, 9, 12, 14].map((value) => (

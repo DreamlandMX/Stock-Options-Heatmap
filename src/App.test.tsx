@@ -153,5 +153,16 @@ describe('App', () => {
       expect(window.localStorage.getItem(LANGUAGE_STORAGE_KEY)).toBe('en-US');
       expect(document.documentElement.lang).toBe('en-US');
     });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Settings' }));
+    const settings = screen.getByRole('dialog', { name: 'Settings' });
+    const languageSelect = within(settings).getByLabelText('Language / 语言');
+    expect(languageSelect).toHaveValue('en-US');
+
+    fireEvent.change(languageSelect, { target: { value: 'zh-CN' } });
+    await waitFor(() => {
+      expect(window.localStorage.getItem(LANGUAGE_STORAGE_KEY)).toBe('zh-CN');
+      expect(document.documentElement.lang).toBe('zh-CN');
+    });
   });
 });
